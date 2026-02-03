@@ -318,6 +318,7 @@ export function MonthlyView({
                   strokeDasharray="5 5"
                   dot={false}
                   name="日平均"
+                  
                 /> */}
                 <Line
                   type="monotone"
