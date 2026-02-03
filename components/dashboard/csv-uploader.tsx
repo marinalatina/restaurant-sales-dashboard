@@ -11,9 +11,10 @@ import { cn } from '@/lib/utils'
 interface CSVUploaderProps {
   onFileUpload: (file: File) => Promise<void>
   isLoading?: boolean
+  title?: string
 }
 
-export function CSVUploader({ onFileUpload, isLoading }: CSVUploaderProps) {
+export function CSVUploader({ onFileUpload, isLoading, title }: CSVUploaderProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [uploadStatus, setUploadStatus] = useState<
     'idle' | 'success' | 'error'
@@ -70,7 +71,7 @@ export function CSVUploader({ onFileUpload, isLoading }: CSVUploaderProps) {
       <CardHeader>
         <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
           <FileSpreadsheet className="size-5" />
-          CSVファイルをアップロード
+          {title || 'CSVファイルをアップロード'}
         </CardTitle>
       </CardHeader>
       <CardContent>

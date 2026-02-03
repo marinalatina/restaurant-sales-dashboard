@@ -11,8 +11,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  LineChart,
-  Line,
 } from 'recharts'
 import { CalendarDays, TrendingUp } from 'lucide-react'
 import {
@@ -281,7 +279,7 @@ export function MonthlyView({
         <CardContent>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={dailyTrendData}>
+              <BarChart data={dailyTrendData}>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   stroke="#374151"
@@ -311,24 +309,13 @@ export function MonthlyView({
                     name === 'sales' ? '売上' : '日平均',
                   ]}
                 />
-                {/* <Line
-                  type="monotone"
-                  dataKey="average"
-                  stroke="#64748b"
-                  strokeDasharray="5 5"
-                  dot={false}
-                  name="日平均"
-                  
-                /> */}
-                <Line
-                  type="monotone"
+                <Bar
                   dataKey="sales"
-                  stroke={CHART_COLORS.primary}
-                  strokeWidth={2}
-                  dot={{ fill: CHART_COLORS.primary, r: 3 }}
+                  fill={CHART_COLORS.primary}
+                  radius={[4, 4, 0, 0]}
                   name="売上"
                 />
-              </LineChart>
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </CardContent>

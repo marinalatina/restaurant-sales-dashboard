@@ -11,6 +11,7 @@ import {
   Wallet,
   Menu,
   X,
+  Users,
 } from 'lucide-react'
 import {
   parseCSVFile,
@@ -30,6 +31,14 @@ import { DailyView } from './daily-view'
 import { MonthlyView } from './monthly-view'
 import { CashFlowTable } from './cash-flow-table'
 import { TargetSettings } from './target-settings'
+import {
+  parseCustomerCSVContent,
+  aggregateByDay,
+  aggregateByMonth,
+  type CustomerTransaction,
+  type CustomerSummary,
+} from '@/lib/customer-parser'
+import { CustomerAnalysisView } from './customer-analysis-view'
 import { cn } from '@/lib/utils'
 
 export function MainDashboard() {
@@ -42,6 +51,10 @@ export function MainDashboard() {
   const [isLoadingStorage, setIsLoadingStorage] = useState(true)
   const [activeTab, setActiveTab] = useState('daily')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+
+  const [customerRecords, setCustomerRecords] = useState<CustomerTransaction[]>([])
+  const [customerDaily, setCustomerDaily] = useState<CustomerSummary[]>([])
+  const [customerMonthly, setCustomerMonthly] = useState<CustomerSummary[]>([])
 
   // Supabase から初期データを読み込み
   useEffect(() => {
@@ -78,6 +91,29 @@ export function MainDashboard() {
     return () => {
       cancelled = true
     }
+  }, [])
+
+  // Googleスプレッドシートから客層データを自動取得
+  useEffect(() => {
+    async function fetchCustomerData() {
+      try {
+        const res = await fetch('/api/customer-data')
+        if (!res.ok) throw new Error('Failed to fetch')
+        const csvText = await res.text()
+        const records = parseCustomerCSVContent(csvText)
+
+        if (records.length > 0) {
+          setCustomerRecords(records)
+          setCustomerDaily(aggregateByDay(records))
+          setCustomerMonthly(aggregateByMonth(records))
+          // toast.success('客層データを自動更新しました') // Show subtle indicator instead of toast on load?
+        }
+      } catch (e) {
+        console.error('Failed to auto-fetch customer data:', e)
+        // Silent fail or subtle notification
+      }
+    }
+    fetchCustomerData()
   }, [])
 
   const handleFileUpload = useCallback(async (file: File) => {
@@ -167,7 +203,11 @@ export function MainDashboard() {
           )}
         >
           <div className="flex flex-col h-full p-4 space-y-4">
-            <CSVUploader onFileUpload={handleFileUpload} isLoading={isLoading} />
+            <CSVUploader
+              onFileUpload={handleFileUpload}
+              isLoading={isLoading}
+              title="売上データ (レジ)"
+            />
             <TargetSettings targets={targets} onSave={handleTargetSave} />
           </div>
         </aside>
@@ -212,6 +252,10 @@ export function MainDashboard() {
                   <CalendarDays className="size-4" />
                   <span className="hidden sm:inline">月別</span>
                 </TabsTrigger>
+                <TabsTrigger value="customer" className="gap-2">
+                  <Users className="size-4" />
+                  <span className="hidden sm:inline">客層分析</span>
+                </TabsTrigger>
                 <TabsTrigger value="cashflow" className="gap-2">
                   <Wallet className="size-4" />
                   <span className="hidden sm:inline">キャッシュフロー</span>
@@ -245,6 +289,13 @@ export function MainDashboard() {
                   </div>
                   <CashFlowTable dailySummaries={dailySummaries} />
                 </div>
+              </TabsContent>
+
+              <TabsContent value="customer">
+                <CustomerAnalysisView
+                  dailyData={customerDaily}
+                  monthlyData={customerMonthly}
+                />
               </TabsContent>
             </Tabs>
           )}
