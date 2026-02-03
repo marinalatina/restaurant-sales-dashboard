@@ -12,6 +12,8 @@ import {
   Menu,
   X,
   Users,
+  Settings,
+  BarChart3,
 } from 'lucide-react'
 import {
   parseCSVFile,
@@ -38,7 +40,8 @@ import {
   type CustomerTransaction,
   type CustomerSummary,
 } from '@/lib/customer-parser'
-import { CustomerAnalysisView } from './customer-analysis-view'
+import { SalesView } from './sales-view'
+import { SettingsView } from './settings-view'
 import { cn } from '@/lib/utils'
 
 export function MainDashboard() {
@@ -49,7 +52,7 @@ export function MainDashboard() {
   const [targets, setTargets] = useState<SalesTarget[]>(defaultTargets)
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingStorage, setIsLoadingStorage] = useState(true)
-  const [activeTab, setActiveTab] = useState('daily')
+  const [activeTab, setActiveTab] = useState('sales')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   const [customerRecords, setCustomerRecords] = useState<CustomerTransaction[]>([])
@@ -194,25 +197,42 @@ export function MainDashboard() {
         </div>
       </header>
 
-      <div className="flex">
-        {/* Sidebar */}
-        <aside
-          className={cn(
-            'fixed inset-y-0 left-0 z-40 w-64 transform border-r border-border bg-card pt-14 transition-transform duration-200 ease-in-out md:relative md:translate-x-0 md:pt-0',
-            isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          )}
-        >
-          <div className="flex flex-col h-full p-4 space-y-4">
-            <CSVUploader
-              onFileUpload={handleFileUpload}
-              isLoading={isLoading}
-              title="売上データ (レジ)"
-            />
-            <TargetSettings targets={targets} onSave={handleTargetSave} />
-          </div>
-        </aside>
+      <div className="flex h-screen">
+        {/* Left Menu Bar */}
+        <nav className="hidden md:flex flex-col w-16 border-r border-border bg-card h-full">
+          <button
+            onClick={() => setActiveTab('sales')}
+            className={cn(
+              'flex flex-col items-center justify-center h-16 border-b border-border transition-colors',
+              activeTab === 'sales' ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground'
+            )}
+            title="売上"
+          >
+            <BarChart3 className="size-5" />
+          </button>
+          <button
+            onClick={() => setActiveTab('cashflow')}
+            className={cn(
+              'flex flex-col items-center justify-center h-16 border-b border-border transition-colors',
+              activeTab === 'cashflow' ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground'
+            )}
+            title="キャッシュフロー"
+          >
+            <Wallet className="size-5" />
+          </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={cn(
+              'flex flex-col items-center justify-center h-16 border-b border-border transition-colors',
+              activeTab === 'settings' ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-muted-foreground'
+            )}
+            title="設定"
+          >
+            <Settings className="size-5" />
+          </button>
+        </nav>
 
-        {/* Overlay for mobile */}
+
         {isSidebarOpen && (
           <div
             className="fixed inset-0 z-30 bg-background/80 backdrop-blur-sm md:hidden"
@@ -238,66 +258,40 @@ export function MainDashboard() {
               </p>
             </div>
           ) : (
-            <Tabs
-              value={activeTab}
-              onValueChange={setActiveTab}
-              className="space-y-6"
-            >
-              <TabsList className="bg-muted">
-                <TabsTrigger value="daily" className="gap-2">
-                  <Calendar className="size-4" />
-                  <span className="hidden sm:inline">日別</span>
-                </TabsTrigger>
-                <TabsTrigger value="monthly" className="gap-2">
-                  <CalendarDays className="size-4" />
-                  <span className="hidden sm:inline">月別</span>
-                </TabsTrigger>
-                <TabsTrigger value="customer" className="gap-2">
-                  <Users className="size-4" />
-                  <span className="hidden sm:inline">客層分析</span>
-                </TabsTrigger>
-                <TabsTrigger value="cashflow" className="gap-2">
-                  <Wallet className="size-4" />
-                  <span className="hidden sm:inline">キャッシュフロー</span>
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="daily">
-                <DailyView
+            <>
+              {activeTab === 'sales' && (
+                <SalesView
                   dailySummaries={dailySummaries}
-                  dailyTarget={dailyTarget}
-                />
-              </TabsContent>
-
-              <TabsContent value="monthly">
-                <MonthlyView
+                  weeklySummaries={weeklySummaries}
                   monthlySummaries={monthlySummaries}
-                  dailySummaries={dailySummaries}
-                  monthlyTarget={monthlyTarget}
+                  targets={targets}
+                  customerDaily={customerDaily}
+                  customerMonthly={customerMonthly}
+                  hasData={hasData}
                 />
-              </TabsContent>
+              )}
 
-              <TabsContent value="cashflow">
+              {activeTab === 'cashflow' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-semibold text-foreground">
-                      キャッシュフロー
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
+                    <h2 className="text-2xl font-bold mb-2">キャッシュフロー</h2>
+                    <p className="text-muted-foreground">
                       日別の売上とキャッシュフローの推移
                     </p>
                   </div>
                   <CashFlowTable dailySummaries={dailySummaries} />
                 </div>
-              </TabsContent>
+              )}
 
-              <TabsContent value="customer">
-                <CustomerAnalysisView
-                  dailyData={customerDaily}
-                  monthlyData={customerMonthly}
+              {activeTab === 'settings' && (
+                <SettingsView
+                  targets={targets}
+                  onTargetSave={handleTargetSave}
+                  onFileUpload={handleFileUpload}
+                  isLoading={isLoading}
                 />
-              </TabsContent>
-            </Tabs>
+              )}
+            </>
           )}
         </main>
       </div>
