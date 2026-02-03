@@ -9,6 +9,9 @@ import { Calendar, CalendarDays, Users } from 'lucide-react'
 import { type DailySummary, type WeeklySummary, type MonthlySummary } from '@/lib/csv-parser'
 import { type SalesTarget } from '@/lib/sales-store'
 import { type CustomerSummary } from '@/lib/customer-parser'
+import { TrueAverageView } from './true-average-view'
+import { MergedAnalysisRecord } from '@/lib/data-merger'
+import { PieChart } from 'lucide-react'
 
 interface SalesViewProps {
     dailySummaries: DailySummary[]
@@ -17,6 +20,7 @@ interface SalesViewProps {
     targets: SalesTarget[]
     customerDaily: CustomerSummary[]
     customerMonthly: CustomerSummary[]
+    mergedRecords: MergedAnalysisRecord[]
     hasData: boolean
 }
 
@@ -27,6 +31,7 @@ export function SalesView({
     targets,
     customerDaily,
     customerMonthly,
+    mergedRecords,
     hasData
 }: SalesViewProps) {
     return (
@@ -51,6 +56,10 @@ export function SalesView({
                     <TabsTrigger value="customer" className="flex items-center gap-2">
                         <Users className="size-4" />
                         客層分析
+                    </TabsTrigger>
+                    <TabsTrigger value="true-average" className="flex items-center gap-2">
+                        <PieChart className="size-4" />
+                        真の客単価分析
                     </TabsTrigger>
                 </TabsList>
 
@@ -94,6 +103,10 @@ export function SalesView({
                         dailyData={customerDaily}
                         monthlyData={customerMonthly}
                     />
+                </TabsContent>
+
+                <TabsContent value="true-average" className="mt-6">
+                    <TrueAverageView records={mergedRecords} />
                 </TabsContent>
             </Tabs>
         </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -42,6 +42,7 @@ import {
 } from '@/lib/customer-parser'
 import { SalesView } from './sales-view'
 import { SettingsView } from './settings-view'
+import { mergeSalesAndCustomerData, type MergedAnalysisRecord } from '@/lib/data-merger'
 import { cn } from '@/lib/utils'
 
 export function MainDashboard() {
@@ -118,6 +119,12 @@ export function MainDashboard() {
     }
     fetchCustomerData()
   }, [])
+
+  // 突合データの算出
+  const mergedRecords = useMemo(() => {
+    if (records.length === 0) return []
+    return mergeSalesAndCustomerData(records, customerRecords)
+  }, [records, customerRecords])
 
   const handleFileUpload = useCallback(async (file: File) => {
     setIsLoading(true)
@@ -247,6 +254,13 @@ export function MainDashboard() {
               <div className="size-10 border-2 border-primary border-t-transparent rounded-full animate-spin mb-4" />
               <p className="text-muted-foreground">データを読み込み中...</p>
             </div>
+          ) : activeTab === 'settings' ? (
+            <SettingsView
+              targets={targets}
+              onTargetSave={handleTargetSave}
+              onFileUpload={handleFileUpload}
+              isLoading={isLoading}
+            />
           ) : !hasData ? (
             <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
               <LayoutDashboard className="size-16 text-muted-foreground/50 mb-4" />
@@ -254,7 +268,7 @@ export function MainDashboard() {
                 データがありません
               </h2>
               <p className="text-muted-foreground max-w-md">
-                左側のパネルからCSVファイルをアップロードして、売上データを分析しましょう。
+                「設定」メニューから売上データ（CSV）をアップロードして、分析を開始しましょう。
               </p>
             </div>
           ) : (
@@ -267,6 +281,7 @@ export function MainDashboard() {
                   targets={targets}
                   customerDaily={customerDaily}
                   customerMonthly={customerMonthly}
+                  mergedRecords={mergedRecords}
                   hasData={hasData}
                 />
               )}
@@ -281,15 +296,6 @@ export function MainDashboard() {
                   </div>
                   <CashFlowTable dailySummaries={dailySummaries} />
                 </div>
-              )}
-
-              {activeTab === 'settings' && (
-                <SettingsView
-                  targets={targets}
-                  onTargetSave={handleTargetSave}
-                  onFileUpload={handleFileUpload}
-                  isLoading={isLoading}
-                />
               )}
             </>
           )}

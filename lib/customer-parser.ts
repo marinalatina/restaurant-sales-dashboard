@@ -5,6 +5,7 @@ export interface CustomerTransaction {
     femaleCount: number
     unknownCount: number
     totalCount: number
+    orderId: string // Q2: 伝票番号
 
     // Age Groups
     ageElementary: number // 小学生以下
@@ -101,6 +102,7 @@ export function parseCustomerCSVContent(text: string): CustomerTransaction[] {
 
     // Find column indices dynamically
     const idxTimestamp = header.findIndex(h => h.includes('Timestamp'))
+    const idxOrderId = header.findIndex(h => h.includes('Q2') && h.includes('伝票番号'))
 
     // Gender
     const idxFemale = header.findIndex(h => h.includes('女性') && h.includes('Mahila'))
@@ -145,6 +147,7 @@ export function parseCustomerCSVContent(text: string): CustomerTransaction[] {
             femaleCount: female,
             unknownCount: unknown,
             totalCount: male + female + unknown,
+            orderId: idxOrderId !== -1 ? (cols[idxOrderId] || '').trim() : '',
 
             ageElementary,
             ageStudent,
